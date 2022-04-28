@@ -26,6 +26,7 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 import io.flutter.plugin.common.PluginRegistry.RequestPermissionsResultListener;
+import io.flutter.embedding.engine.plugins.FlutterPlugin;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,7 +35,7 @@ import java.util.Map;
 import java.util.Vector;
 
 /** FlutterBluetoothBasicPlugin */
-public class FlutterBluetoothBasicPlugin implements MethodCallHandler, RequestPermissionsResultListener {
+public class FlutterBluetoothBasicPlugin implements FlutterPlugin, MethodCallHandler, RequestPermissionsResultListener {
   private static final String TAG = "BluetoothBasicPlugin";
   private int id = 0;
   private ThreadPool threadPool;
@@ -50,9 +51,13 @@ public class FlutterBluetoothBasicPlugin implements MethodCallHandler, RequestPe
   private MethodCall pendingCall;
   private Result pendingResult;
 
-  public static void registerWith(Registrar registrar) {
+
+  private static void registerRegistrar(Registrar registrar){
     final FlutterBluetoothBasicPlugin instance = new FlutterBluetoothBasicPlugin(registrar);
     registrar.addRequestPermissionsResultListener(instance);
+  }
+  public static void registerWith(Registrar registrar) {
+    registerRegistrar(registrar);
   }
 
   FlutterBluetoothBasicPlugin(Registrar r){
