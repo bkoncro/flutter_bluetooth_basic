@@ -163,7 +163,14 @@ public class FlutterBluetoothBasicPlugin implements FlutterPlugin, MethodCallHan
         ret.put("name", device.getName());
         ret.put("type", device.getType());
 
-        activity.runOnUiThread(() -> channel.invokeMethod(name, ret));
+        // activity.runOnUiThread(() -> channel.invokeMethod(name, ret));
+        activity.runOnUiThread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        channel.invokeMethod(name, ret);
+                    }
+                });
     }
 
     private final ScanCallback mScanCallback = new ScanCallback() {
