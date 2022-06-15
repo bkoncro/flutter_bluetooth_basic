@@ -43,7 +43,8 @@ import io.flutter.plugin.common.PluginRegistry.RequestPermissionsResultListener;
 /**
  * FlutterBluetoothBasicPlugin
  */
-public class FlutterBluetoothBasicPlugin implements FlutterPlugin, MethodCallHandler, ActivityAware, RequestPermissionsResultListener {
+public class FlutterBluetoothBasicPlugin
+        implements FlutterPlugin, MethodCallHandler, ActivityAware, RequestPermissionsResultListener {
     private static final String TAG = "BluetoothBasicPlugin";
     private final int id = 0;
     private ThreadPool threadPool;
@@ -57,7 +58,8 @@ public class FlutterBluetoothBasicPlugin implements FlutterPlugin, MethodCallHan
 
     private Result pendingResult;
 
-    // plugin should still contain the static registerWith() method to remain compatible with apps
+    // plugin should still contain the static registerWith() method to remain
+    // compatible with apps
     // that don’t use the v2 Android embedding.
     public static void registerWith(Registrar registrar) {
         FlutterBluetoothBasicPlugin instance = new FlutterBluetoothBasicPlugin();
@@ -88,11 +90,11 @@ public class FlutterBluetoothBasicPlugin implements FlutterPlugin, MethodCallHan
                 result.success(threadPool != null);
                 break;
             case "startScan": {
-                if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_COARSE_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED) {
+                if (ContextCompat.checkSelfPermission(activity,
+                        Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(
                             activity,
-                            new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                            new String[] { Manifest.permission.ACCESS_COARSE_LOCATION },
                             REQUEST_COARSE_LOCATION_PERMISSIONS);
                     pendingResult = result;
                     break;
@@ -195,7 +197,8 @@ public class FlutterBluetoothBasicPlugin implements FlutterPlugin, MethodCallHan
 
     private void stopScan() {
         BluetoothLeScanner scanner = bluetoothAdapter.getBluetoothLeScanner();
-        if (scanner != null) scanner.stopScan(mScanCallback);
+        if (scanner != null)
+            scanner.stopScan(mScanCallback);
     }
 
     private void connect(Result result, Map<String, Object> args) {
@@ -212,7 +215,14 @@ public class FlutterBluetoothBasicPlugin implements FlutterPlugin, MethodCallHan
                     .build();
             // Open port
             threadPool = ThreadPool.getInstantiation();
-            threadPool.addSerialTask(() -> DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].openPort());
+            // threadPool.addSerialTask(() ->
+            // DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].openPort());
+            threadPool.addSerialTask(new Runnable() {
+                @Override
+                public void run() {
+                    DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].openPort();
+                }
+            });
 
             result.success(true);
         } else {
@@ -225,7 +235,8 @@ public class FlutterBluetoothBasicPlugin implements FlutterPlugin, MethodCallHan
      */
     private boolean disconnect() {
 
-        if (DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id] != null && DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].mPort != null) {
+        if (DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id] != null
+                && DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].mPort != null) {
             DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].reader.cancel();
             DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].mPort.closePort();
             DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].mPort = null;
@@ -248,14 +259,16 @@ public class FlutterBluetoothBasicPlugin implements FlutterPlugin, MethodCallHan
             final ArrayList<Integer> bytes = Objects.requireNonNull((ArrayList<Integer>) args.get("bytes"));
 
             threadPool = ThreadPool.getInstantiation();
-            threadPool.addSerialTask(() -> {
-                Vector<Byte> vectorData = new Vector<>();
-                for (int i = 0; i < bytes.size(); ++i) {
-                    Integer val = bytes.get(i);
-                    vectorData.add(Byte.valueOf(Integer.toString(val > 127 ? val - 256 : val)));
+            threadPool.addSerialTask(new Runnable() {
+                @Override
+                public void run() {
+                    Vector<Byte> vectorData = new Vector<>();
+                    for (int i = 0; i < bytes.size(); ++i) {
+                        Integer val = bytes.get(i);
+                        vectorData.add(Byte.valueOf(Integer.toString(val > 127 ? val - 256 : val)));
+                    }
+                    DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].sendDataImmediately(vectorData);
                 }
-
-                DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].sendDataImmediately(vectorData);
             });
         } else {
             result.error("bytes_empty", "Bytes param is empty", null);
